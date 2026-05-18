@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, ChevronLeft, X } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, Mail, Music2, X, Youtube } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/")({
@@ -222,15 +222,40 @@ function Index() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 mt-16">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-6 py-12 md:flex-row">
-          <Logo />
-          <div className="text-xs text-muted-foreground">© {new Date().getFullYear()} NazAI. All rights reserved.</div>
-          <div className="flex gap-6 text-xs text-muted-foreground">
-            <a href="#" className="hover:text-foreground">Privacy</a>
-            <a href="#" className="hover:text-foreground">Terms</a>
-            <a href="#" className="hover:text-foreground">Contact</a>
+      <footer className="border-t border-border/40 mt-16"
+        style={{ background: "radial-gradient(ellipse at bottom left, oklch(0.2 0.08 290 / 0.4), transparent 60%), oklch(0.1 0.02 270)" }}>
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 sm:grid-cols-2 md:grid-cols-4">
+          <div>
+            <Logo />
+            <p className="mt-4 text-sm text-muted-foreground">Built for the Future.</p>
+            <div className="mt-4 text-xs font-semibold uppercase tracking-[0.25em] text-[var(--cyan)]">AI Business OS</div>
           </div>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Product</div>
+            <ul className="mt-5 space-y-3 text-sm">
+              <li><a href="#product" className="text-foreground/80 transition hover:text-foreground">Domain Master</a></li>
+              <li><a href="#product" className="text-foreground/80 transition hover:text-foreground">Brand-Snap Canvas</a></li>
+              <li><a href="#usecases" className="text-foreground/80 transition hover:text-foreground">Operations</a></li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Company</div>
+            <ul className="mt-5 space-y-3 text-sm">
+              <li><a href="https://www.youtube.com/@NazAI-n8b" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-foreground/80 transition hover:text-foreground"><Youtube className="h-4 w-4" /> YouTube</a></li>
+              <li><a href="https://www.tiktok.com/@nazai.ai.business" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-foreground/80 transition hover:text-foreground"><Music2 className="h-4 w-4" /> TikTok</a></li>
+              <li><a href="mailto:nazai8832@gmail.com" className="inline-flex items-center gap-2 text-foreground/80 transition hover:text-foreground"><Mail className="h-4 w-4" /> Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Legal</div>
+            <ul className="mt-5 space-y-3 text-sm">
+              <li><a href="#" className="text-foreground/80 transition hover:text-foreground">Terms</a></li>
+              <li><a href="#" className="text-foreground/80 transition hover:text-foreground">Privacy Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-t border-border/40">
+          <div className="mx-auto max-w-7xl px-6 py-5 text-xs text-muted-foreground">© {new Date().getFullYear()} NazAI. All rights reserved.</div>
         </div>
       </footer>
       <WaitlistModal open={open} onClose={() => setOpen(false)} />
