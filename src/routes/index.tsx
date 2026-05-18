@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, ChevronLeft, X } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, Mail, Music2, X, Youtube } from "lucide-react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/")({
