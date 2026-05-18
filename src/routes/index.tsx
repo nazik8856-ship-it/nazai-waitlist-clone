@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, X } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,7 +40,13 @@ const testimonials = [
 function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-gradient-to-br from-[var(--cyan)]/30 to-[var(--magenta)]/30 text-sm font-bold">
+      <div
+        className="flex h-9 w-9 items-center justify-center rounded-xl text-base font-extrabold text-[oklch(0.7_0.2_250)]"
+        style={{
+          background: "oklch(0.16 0.03 270)",
+          boxShadow: "0 0 0 1px oklch(0.5 0.15 250 / 0.5), 0 0 18px oklch(0.6 0.2 260 / 0.45)",
+        }}
+      >
         N
       </div>
       <span className="text-base font-semibold tracking-tight">NazAI</span>
@@ -47,15 +54,16 @@ function Logo() {
   );
 }
 
-function JoinButton({ className = "" }: { className?: string }) {
+function JoinButton({ className = "", onClick }: { className?: string; onClick?: () => void }) {
   return (
-    <a
-      href="#waitlist"
+    <button
+      type="button"
+      onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 ${className}`}
       style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
     >
       Join Waitlist <ArrowRight className="h-4 w-4" />
-    </a>
+    </button>
   );
 }
 
