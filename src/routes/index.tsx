@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Check, ChevronLeft, X } from "lucide-react";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,7 +40,13 @@ const testimonials = [
 function Logo() {
   return (
     <div className="flex items-center gap-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-gradient-to-br from-[var(--cyan)]/30 to-[var(--magenta)]/30 text-sm font-bold">
+      <div
+        className="flex h-9 w-9 items-center justify-center rounded-xl text-base font-extrabold text-[oklch(0.7_0.2_250)]"
+        style={{
+          background: "oklch(0.16 0.03 270)",
+          boxShadow: "0 0 0 1px oklch(0.5 0.15 250 / 0.5), 0 0 18px oklch(0.6 0.2 260 / 0.45)",
+        }}
+      >
         N
       </div>
       <span className="text-base font-semibold tracking-tight">NazAI</span>
@@ -47,15 +54,16 @@ function Logo() {
   );
 }
 
-function JoinButton({ className = "" }: { className?: string }) {
+function JoinButton({ className = "", onClick }: { className?: string; onClick?: () => void }) {
   return (
-    <a
-      href="#waitlist"
+    <button
+      type="button"
+      onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 ${className}`}
       style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
     >
       Join Waitlist <ArrowRight className="h-4 w-4" />
-    </a>
+    </button>
   );
 }
 
@@ -70,6 +78,8 @@ function AvatarStack() {
 }
 
 function Index() {
+  const [open, setOpen] = useState(false);
+  const openModal = () => setOpen(true);
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       {/* ambient background */}
@@ -89,7 +99,7 @@ function Index() {
             <a href="#usecases" className="transition hover:text-foreground">Use Cases</a>
             <a href="#pricing" className="transition hover:text-foreground">Pricing</a>
           </nav>
-          <JoinButton />
+          <JoinButton onClick={openModal} />
         </div>
       </header>
 
@@ -110,7 +120,7 @@ function Index() {
           <span className="text-[var(--magenta)]">Auto Engine</span> for deep reasoning across all business domains.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-5">
-          <JoinButton />
+          <JoinButton onClick={openModal} />
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <AvatarStack /> <span><span className="font-semibold text-foreground">3</span> already on the list</span>
           </div>
@@ -166,7 +176,7 @@ function Index() {
             NazAI is launching to select founders first. Join the waitlist and get early access, priority onboarding, and a founding member price lock.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-5">
-            <JoinButton />
+            <JoinButton onClick={openModal} />
             <div className="flex items-center gap-3 text-sm text-muted-foreground">
               <AvatarStack /> <span><span className="font-semibold text-foreground">3</span> founders already waiting</span>
             </div>
@@ -223,6 +233,251 @@ function Index() {
           </div>
         </div>
       </footer>
+      <WaitlistModal open={open} onClose={() => setOpen(false)} />
+    </div>
+  );
+}
+
+type Answers = { role: string; revenue: string; urgency: string; name: string; email: string; phone: string };
+
+const STEPS = [
+  {
+    key: "role" as const,
+    title: "What's your role?",
+    subtitle: "Help us tailor NazAI for you.",
+    options: ["Founder/CEO", "COO", "CTO", "CMO", "Other"],
+  },
+  {
+    key: "revenue" as const,
+    title: "What's your annual revenue?",
+    subtitle: "We'll match you to the right NazAI tier.",
+    options: ["<$100K", "$100K - $1M", "$1M - $5M", "$5M - $10M", "$10M+"],
+  },
+  {
+    key: "urgency" as const,
+    title: "How urgent is AI automation?",
+    subtitle: "Based on your current operations.",
+    options: ["Critical", "High", "Medium", "Low"],
+  },
+];
+
+function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [step, setStep] = useState(0);
+  const [done, setDone] = useState(false);
+  const [answers, setAnswers] = useState<Answers>({
+    role: "", revenue: "", urgency: "", name: "", email: "", phone: "",
+  });
+
+  if (!open) return null;
+
+  const reset = () => { setStep(0); setDone(false); setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" }); };
+  const close = () => { onClose(); setTimeout(reset, 300); };
+
+  const selectOption = (key: keyof Answers, value: string) => {
+    setAnswers((a) => ({ ...a, [key]: value }));
+    setTimeout(() => setStep((s) => s + 1), 150);
+  };
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!answers.name || !answers.email) return;
+    setDone(true);
+  };
+
+  const totalSteps = 4;
+  const activeStep = done ? totalSteps : step;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={close} />
+      <div
+        className="relative w-full max-w-xl rounded-2xl border border-border/60 p-6 sm:p-8"
+        style={{
+          background: "oklch(0.14 0.03 270)",
+          boxShadow: "0 0 0 1px oklch(0.5 0.15 270 / 0.3), 0 30px 80px oklch(0 0 0 / 0.6), 0 0 60px oklch(0.7 0.25 320 / 0.15)",
+        }}
+      >
+        {!done && (
+          <button onClick={close} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+
+        {!done ? (
+          <>
+            <div className="flex items-center gap-3">
+              <Logo />
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--magenta)]">Join Waitlist</span>
+            </div>
+
+            {/* progress dots */}
+            <div className="mt-6 flex items-center justify-center gap-2">
+              {Array.from({ length: totalSteps }).map((_, i) => {
+                const isActive = i === activeStep;
+                const isPast = i < activeStep;
+                return (
+                  <span
+                    key={i}
+                    className="h-1.5 rounded-full transition-all"
+                    style={{
+                      width: isActive ? 28 : 8,
+                      background: isActive
+                        ? "var(--magenta)"
+                        : isPast
+                        ? "var(--cyan)"
+                        : "oklch(0.3 0.04 270)",
+                      boxShadow: isActive ? "0 0 12px var(--magenta)" : "none",
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            {step < 3 ? (
+              <StepChoice
+                step={STEPS[step]}
+                value={answers[STEPS[step].key]}
+                onSelect={(v) => selectOption(STEPS[step].key, v)}
+                onBack={step > 0 ? () => setStep((s) => s - 1) : undefined}
+              />
+            ) : (
+              <StepContact
+                answers={answers}
+                setAnswers={setAnswers}
+                onBack={() => setStep(2)}
+                onSubmit={submit}
+              />
+            )}
+          </>
+        ) : (
+          <SuccessView answers={answers} onClose={close} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StepChoice({
+  step, value, onSelect, onBack,
+}: {
+  step: typeof STEPS[number];
+  value: string;
+  onSelect: (v: string) => void;
+  onBack?: () => void;
+}) {
+  return (
+    <div className="mt-8">
+      <h3 className="text-2xl font-bold tracking-tight">{step.title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground">{step.subtitle}</p>
+      <div className="mt-6 space-y-3">
+        {step.options.map((opt) => {
+          const active = value === opt;
+          return (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => onSelect(opt)}
+              className="block w-full rounded-xl border px-5 py-4 text-left text-sm font-medium transition-all hover:border-[var(--magenta)]/60 hover:bg-[var(--magenta)]/5"
+              style={{
+                borderColor: active ? "var(--magenta)" : "oklch(0.3 0.04 270 / 60%)",
+                background: active ? "oklch(0.7 0.25 320 / 0.1)" : "oklch(0.17 0.03 270)",
+              }}
+            >
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+      {onBack && (
+        <button onClick={onBack} className="mt-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+          <ChevronLeft className="h-4 w-4" /> Back
+        </button>
+      )}
+    </div>
+  );
+}
+
+function StepContact({
+  answers, setAnswers, onBack, onSubmit,
+}: {
+  answers: Answers;
+  setAnswers: React.Dispatch<React.SetStateAction<Answers>>;
+  onBack: () => void;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  const field = (label: string, key: keyof Answers, type: string, placeholder: string) => (
+    <div>
+      <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</label>
+      <input
+        type={type}
+        value={answers[key]}
+        onChange={(e) => setAnswers((a) => ({ ...a, [key]: e.target.value }))}
+        placeholder={placeholder}
+        className="mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[var(--magenta)]"
+        style={{ borderColor: "oklch(0.3 0.04 270 / 60%)", background: "oklch(0.17 0.03 270)" }}
+      />
+    </div>
+  );
+  return (
+    <form onSubmit={onSubmit} className="mt-8">
+      <h3 className="text-2xl font-bold tracking-tight">Almost Done!</h3>
+      <p className="mt-1 text-sm text-muted-foreground">We'll send your access confirmation here.</p>
+      <div className="mt-6 space-y-4">
+        {field("Full Name", "name", "text", "John Smith")}
+        {field("Email Address", "email", "email", "john@company.com")}
+        {field("Phone Number", "phone", "tel", "+1 (555) 000-0000")}
+      </div>
+      <div className="mt-8 flex items-center justify-between">
+        <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+          <ChevronLeft className="h-4 w-4" /> Back
+        </button>
+        <button
+          type="submit"
+          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+          style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
+        >
+          Claim My Spot <Check className="h-4 w-4" />
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function SuccessView({ answers, onClose }: { answers: Answers; onClose: () => void }) {
+  const position = 4;
+  const name = answers.name?.trim() || "founder";
+  return (
+    <div className="py-4 text-center">
+      <button onClick={onClose} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground">
+        <X className="h-4 w-4" />
+      </button>
+      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full"
+        style={{ background: "oklch(0.7 0.25 320 / 0.15)", boxShadow: "0 0 40px oklch(0.7 0.25 320 / 0.4)" }}>
+        <Check className="h-8 w-8 text-[var(--magenta)]" />
+      </div>
+      <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--magenta)]/40 bg-[var(--magenta)]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[var(--magenta)]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--magenta)]" /> Position #{position} Secured
+      </div>
+      <h3 className="mx-auto mt-6 max-w-md text-3xl font-bold leading-tight">
+        Welcome to the list, <span className="text-[var(--magenta)]">{name}.</span>
+        <br />We're glad you're here.
+      </h3>
+      <p className="mx-auto mt-4 max-w-md text-sm text-muted-foreground">
+        You've officially joined the NazAI waitlist — and that means a lot to us. We're building something we believe in, and knowing you're waiting makes it even more worth building. We'll be in touch soon.
+      </p>
+      <div className="mx-auto mt-6 max-w-md rounded-2xl border border-border/60 p-5 text-left"
+        style={{ background: "oklch(0.17 0.03 270)" }}>
+        <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Your Waitlist Position</div>
+        <div className="mt-2 flex items-center gap-4">
+          <div className="text-5xl font-extrabold bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
+            #{position}
+          </div>
+          <div>
+            <div className="text-sm font-semibold">{name}</div>
+            <div className="text-xs text-muted-foreground">Access confirmation will be sent by email when we launch.</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
