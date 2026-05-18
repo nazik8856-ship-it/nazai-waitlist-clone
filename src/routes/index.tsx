@@ -264,6 +264,7 @@ const STEPS = [
 function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
+  const [position, setPosition] = useState<number>(0);
   const [answers, setAnswers] = useState<Answers>({
     role: "", revenue: "", urgency: "", name: "", email: "", phone: "",
   });
@@ -281,6 +282,14 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!answers.name || !answers.email) return;
+    const BASE = 2400;
+    let next = BASE + 1;
+    try {
+      const stored = Number(localStorage.getItem("nazai_waitlist_count") || "0");
+      next = BASE + (isNaN(stored) ? 0 : stored) + 1;
+      localStorage.setItem("nazai_waitlist_count", String((isNaN(stored) ? 0 : stored) + 1));
+    } catch {}
+    setPosition(next);
     setDone(true);
   };
 
@@ -288,17 +297,17 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   const activeStep = done ? totalSteps : step;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto p-3 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={close} />
       <div
-        className="relative w-full max-w-xl rounded-2xl border border-border/60 p-6 sm:p-8"
+        className="relative my-4 max-h-[calc(100vh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl border border-border/60 p-5 sm:my-0 sm:max-h-[90vh] sm:p-8"
         style={{
           background: "oklch(0.14 0.03 270)",
           boxShadow: "0 0 0 1px oklch(0.5 0.15 270 / 0.3), 0 30px 80px oklch(0 0 0 / 0.6), 0 0 60px oklch(0.7 0.25 320 / 0.15)",
         }}
       >
         {!done && (
-          <button onClick={close} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground">
+          <button onClick={close} className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground sm:right-4 sm:top-4">
             <X className="h-4 w-4" />
           </button>
         )}
@@ -350,7 +359,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
             )}
           </>
         ) : (
-          <SuccessView answers={answers} onClose={close} />
+          <SuccessView answers={answers} position={position} onClose={close} />
         )}
       </div>
     </div>
@@ -366,10 +375,10 @@ function StepChoice({
   onBack?: () => void;
 }) {
   return (
-    <div className="mt-8">
-      <h3 className="text-2xl font-bold tracking-tight">{step.title}</h3>
+    <div className="mt-6 sm:mt-8">
+      <h3 className="text-xl font-bold tracking-tight sm:text-2xl">{step.title}</h3>
       <p className="mt-1 text-sm text-muted-foreground">{step.subtitle}</p>
-      <div className="mt-6 space-y-3">
+      <div className="mt-5 space-y-2.5 sm:space-y-3">
         {step.options.map((opt) => {
           const active = value === opt;
           return (
@@ -377,7 +386,7 @@ function StepChoice({
               key={opt}
               type="button"
               onClick={() => onSelect(opt)}
-              className="block w-full rounded-xl border px-5 py-4 text-left text-sm font-medium transition-all hover:border-[var(--magenta)]/60 hover:bg-[var(--magenta)]/5"
+              className="block w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all hover:border-[var(--magenta)]/60 hover:bg-[var(--magenta)]/5 sm:px-5 sm:py-4"
               style={{
                 borderColor: active ? "var(--magenta)" : "oklch(0.3 0.04 270 / 60%)",
                 background: active ? "oklch(0.7 0.25 320 / 0.1)" : "oklch(0.17 0.03 270)",
@@ -389,7 +398,7 @@ function StepChoice({
         })}
       </div>
       {onBack && (
-        <button onClick={onBack} className="mt-6 inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+        <button onClick={onBack} className="mt-5 inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
       )}
@@ -419,21 +428,21 @@ function StepContact({
     </div>
   );
   return (
-    <form onSubmit={onSubmit} className="mt-8">
-      <h3 className="text-2xl font-bold tracking-tight">Almost Done!</h3>
+    <form onSubmit={onSubmit} className="mt-6 sm:mt-8">
+      <h3 className="text-xl font-bold tracking-tight sm:text-2xl">Almost Done!</h3>
       <p className="mt-1 text-sm text-muted-foreground">We'll send your access confirmation here.</p>
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-4">
         {field("Full Name", "name", "text", "John Smith")}
         {field("Email Address", "email", "email", "john@company.com")}
         {field("Phone Number", "phone", "tel", "+1 (555) 000-0000")}
       </div>
-      <div className="mt-8 flex items-center justify-between">
+      <div className="mt-7 flex items-center justify-between gap-3">
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <button
           type="submit"
-          className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
           style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
         >
           Claim My Spot <Check className="h-4 w-4" />
@@ -443,12 +452,11 @@ function StepContact({
   );
 }
 
-function SuccessView({ answers, onClose }: { answers: Answers; onClose: () => void }) {
-  const position = 4;
+function SuccessView({ answers, position, onClose }: { answers: Answers; position: number; onClose: () => void }) {
   const name = answers.name?.trim() || "founder";
   return (
     <div className="py-4 text-center">
-      <button onClick={onClose} className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground">
+      <button onClick={onClose} className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground sm:right-4 sm:top-4">
         <X className="h-4 w-4" />
       </button>
       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full"
@@ -456,9 +464,9 @@ function SuccessView({ answers, onClose }: { answers: Answers; onClose: () => vo
         <Check className="h-8 w-8 text-[var(--magenta)]" />
       </div>
       <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[var(--magenta)]/40 bg-[var(--magenta)]/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-[var(--magenta)]">
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--magenta)]" /> Position #{position} Secured
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--magenta)]" /> Position #{position.toLocaleString()} Secured
       </div>
-      <h3 className="mx-auto mt-6 max-w-md text-3xl font-bold leading-tight">
+      <h3 className="mx-auto mt-6 max-w-md text-2xl font-bold leading-tight sm:text-3xl">
         Welcome to the list, <span className="text-[var(--magenta)]">{name}.</span>
         <br />We're glad you're here.
       </h3>
@@ -469,8 +477,8 @@ function SuccessView({ answers, onClose }: { answers: Answers; onClose: () => vo
         style={{ background: "oklch(0.17 0.03 270)" }}>
         <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">Your Waitlist Position</div>
         <div className="mt-2 flex items-center gap-4">
-          <div className="text-5xl font-extrabold bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
-            #{position}
+          <div className="text-4xl font-extrabold bg-clip-text text-transparent sm:text-5xl" style={{ backgroundImage: "var(--gradient-hero)" }}>
+            #{position.toLocaleString()}
           </div>
           <div>
             <div className="text-sm font-semibold">{name}</div>
