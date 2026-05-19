@@ -1,9 +1,11 @@
 {
   "version": 2,
-  "rewrites": [
+  "framework": "vite",
+  "builds": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": ".output/public" }
     }
   ]
 }
