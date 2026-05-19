@@ -521,7 +521,7 @@ function StepContact({
 function SuccessView({ answers, position, onClose }: { answers: Answers; position: number; onClose: () => void }) {
   const name = answers.name?.trim() || "founder";
   return (
-    <div className="py-4 text-center">
+    <div className="py-4 text-center animate-[fade-in_0.5s_ease-out]">
       <button onClick={onClose} className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-border/60 bg-background/40 text-muted-foreground transition hover:text-foreground sm:right-4 sm:top-4">
         <X className="h-4 w-4" />
       </button>
