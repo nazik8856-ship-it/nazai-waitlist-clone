@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Check, ChevronLeft, Mail, Music2, X, Youtube } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -290,13 +291,15 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
   const [position, setPosition] = useState<number>(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answers>({
     role: "", revenue: "", urgency: "", name: "", email: "", phone: "",
   });
 
   if (!open) return null;
 
-  const reset = () => { setStep(0); setDone(false); setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" }); };
+  const reset = () => { setStep(0); setDone(false); setError(null); setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" }); };
   const close = () => { onClose(); setTimeout(reset, 300); };
 
   const selectOption = (key: keyof Answers, value: string) => {
@@ -304,18 +307,47 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
     setTimeout(() => setStep((s) => s + 1), 150);
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!answers.name || !answers.email) return;
-    const BASE = 2400;
-    let next = BASE + 1;
-    try {
-      const stored = Number(localStorage.getItem("nazai_waitlist_count") || "0");
-      next = BASE + (isNaN(stored) ? 0 : stored) + 1;
-      localStorage.setItem("nazai_waitlist_count", String((isNaN(stored) ? 0 : stored) + 1));
-    } catch {}
-    setPosition(next);
+    setSubmitting(true);
+    setError(null);
+    const { data, error: insertError } = await supabase
+      .from("waitlist_signups")
+      .insert({
+        name: answers.name.trim(),
+        email: answers.email.trim().toLowerCase(),
+        phone: answers.phone || null,
+        role: answers.role || null,
+        revenue: answers.revenue || null,
+        urgency: answers.urgency || null,
+      })
+      .select("position")
+      .single();
+
+    if (insertError) {
+      // If they already signed up, fetch existing position
+      if (insertError.code === "23505") {
+        const { data: existing } = await supabase
+          .from("waitlist_signups")
+          .select("position")
+          .eq("email", answers.email.trim().toLowerCase())
+          .maybeSingle();
+        if (existing) {
+          setPosition(Number(existing.position));
+          setDone(true);
+          setSubmitting(false);
+          return;
+        }
+      }
+      setError(insertError.message || "Something went wrong. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    setPosition(Number(data!.position));
     setDone(true);
+    setSubmitting(false);
   };
 
   const totalSteps = 4;
@@ -369,6 +401,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
 
             {step < 3 ? (
               <StepChoice
+                key={step}
                 step={STEPS[step]}
                 value={answers[STEPS[step].key]}
                 onSelect={(v) => selectOption(STEPS[step].key, v)}
@@ -376,10 +409,13 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
               />
             ) : (
               <StepContact
+                key="contact"
                 answers={answers}
                 setAnswers={setAnswers}
                 onBack={() => setStep(2)}
                 onSubmit={submit}
+                submitting={submitting}
+                error={error}
               />
             )}
           </>
@@ -400,21 +436,22 @@ function StepChoice({
   onBack?: () => void;
 }) {
   return (
-    <div className="mt-6 sm:mt-8">
-      <h3 className="text-xl font-bold tracking-tight sm:text-2xl">{step.title}</h3>
-      <p className="mt-1 text-sm text-muted-foreground">{step.subtitle}</p>
+    <div className="mt-6 animate-[fade-in_0.4s_ease-out] sm:mt-8">
+      <h3 className="text-xl font-bold tracking-tight sm:text-2xl" style={{ animation: "fade-in 0.45s ease-out both" }}>{step.title}</h3>
+      <p className="mt-1 text-sm text-muted-foreground" style={{ animation: "fade-in 0.5s ease-out 0.05s both" }}>{step.subtitle}</p>
       <div className="mt-5 space-y-2.5 sm:space-y-3">
-        {step.options.map((opt) => {
+        {step.options.map((opt, i) => {
           const active = value === opt;
           return (
             <button
               key={opt}
               type="button"
               onClick={() => onSelect(opt)}
-              className="block w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all hover:border-[var(--magenta)]/60 hover:bg-[var(--magenta)]/5 sm:px-5 sm:py-4"
+              className="block w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--magenta)]/60 hover:bg-[var(--magenta)]/5 hover:shadow-[0_8px_24px_-12px_oklch(0.7_0.25_320/0.6)] sm:px-5 sm:py-4"
               style={{
                 borderColor: active ? "var(--magenta)" : "oklch(0.3 0.04 270 / 60%)",
                 background: active ? "oklch(0.7 0.25 320 / 0.1)" : "oklch(0.17 0.03 270)",
+                animation: `fade-in 0.45s ease-out ${0.08 + i * 0.06}s both`,
               }}
             >
               {opt}
@@ -423,7 +460,7 @@ function StepChoice({
         })}
       </div>
       {onBack && (
-        <button onClick={onBack} className="mt-5 inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+        <button onClick={onBack} className="mt-5 inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground" style={{ animation: "fade-in 0.5s ease-out 0.35s both" }}>
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
       )}
@@ -432,15 +469,17 @@ function StepChoice({
 }
 
 function StepContact({
-  answers, setAnswers, onBack, onSubmit,
+  answers, setAnswers, onBack, onSubmit, submitting, error,
 }: {
   answers: Answers;
   setAnswers: React.Dispatch<React.SetStateAction<Answers>>;
   onBack: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  submitting: boolean;
+  error: string | null;
 }) {
-  const field = (label: string, key: keyof Answers, type: string, placeholder: string) => (
-    <div>
+  const field = (label: string, key: keyof Answers, type: string, placeholder: string, delay: number) => (
+    <div style={{ animation: `fade-in 0.45s ease-out ${delay}s both` }}>
       <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</label>
       <input
         type={type}
@@ -453,24 +492,26 @@ function StepContact({
     </div>
   );
   return (
-    <form onSubmit={onSubmit} className="mt-6 sm:mt-8">
-      <h3 className="text-xl font-bold tracking-tight sm:text-2xl">Almost Done!</h3>
-      <p className="mt-1 text-sm text-muted-foreground">We'll send your access confirmation here.</p>
+    <form onSubmit={onSubmit} className="mt-6 animate-[fade-in_0.4s_ease-out] sm:mt-8">
+      <h3 className="text-xl font-bold tracking-tight sm:text-2xl" style={{ animation: "fade-in 0.45s ease-out both" }}>Almost Done!</h3>
+      <p className="mt-1 text-sm text-muted-foreground" style={{ animation: "fade-in 0.5s ease-out 0.05s both" }}>We'll send your access confirmation here.</p>
       <div className="mt-5 space-y-4">
-        {field("Full Name", "name", "text", "John Smith")}
-        {field("Email Address", "email", "email", "john@company.com")}
-        {field("Phone Number", "phone", "tel", "+1 (555) 000-0000")}
+        {field("Full Name", "name", "text", "John Smith", 0.1)}
+        {field("Email Address", "email", "email", "john@company.com", 0.18)}
+        {field("Phone Number", "phone", "tel", "+1 (555) 000-0000", 0.26)}
       </div>
-      <div className="mt-7 flex items-center justify-between gap-3">
+      {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
+      <div className="mt-7 flex items-center justify-between gap-3" style={{ animation: "fade-in 0.5s ease-out 0.34s both" }}>
         <button type="button" onClick={onBack} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
         <button
           type="submit"
-          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 sm:px-6 sm:py-3"
+          disabled={submitting}
+          className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60 sm:px-6 sm:py-3"
           style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
         >
-          Claim My Spot <Check className="h-4 w-4" />
+          {submitting ? "Securing…" : "Claim My Spot"} <Check className="h-4 w-4" />
         </button>
       </div>
     </form>
