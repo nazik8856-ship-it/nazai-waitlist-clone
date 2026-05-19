@@ -72,14 +72,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "NazAI" },
+      { name: "description", content: "Turn any business idea into a live, deployed product in minutes. AI-powered validation, business planning, and one-click deployment." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "NazAI" },
+      { property: "og:description", content: "Turn any business idea into a live, deployed product in minutes. AI-powered validation, business planning, and one-click deployment." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "NazAI" },
+      { name: "twitter:description", content: "Turn any business idea into a live, deployed product in minutes. AI-powered validation, business planning, and one-click deployment." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1dda0406-175d-430b-b28c-ff8af124cd94/id-preview-9e0f625b--24d05093-9195-401f-90ff-e6df98d56619.lovable.app-1779153919500.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1dda0406-175d-430b-b28c-ff8af124cd94/id-preview-9e0f625b--24d05093-9195-401f-90ff-e6df98d56619.lovable.app-1779153919500.png" },
     ],
     links: [
       {
