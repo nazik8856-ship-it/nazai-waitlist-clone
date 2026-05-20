@@ -1,19 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Check, ChevronLeft, Mail, Music2, X, Youtube } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "NazAI — Orchestrates Any Business Function" },
-      { name: "description", content: "Join the NazAI early access waitlist. AI Business OS for strategy, operations, finance, marketing, tech, and scaling." },
-      { property: "og:title", content: "NazAI — Orchestrates Any Business Function" },
-      { property: "og:description", content: "Join the NazAI early access waitlist." },
-    ],
-  }),
-  component: Index,
-});
 
 const stats = [
   { value: "2,400+", label: "Early Members" },
@@ -78,9 +65,10 @@ function AvatarStack() {
   );
 }
 
-function Index() {
+export default function Index() {
   const [open, setOpen] = useState(false);
   const openModal = () => setOpen(true);
+  useEffect(() => { document.title = "NazAI — Orchestrates Any Business Function"; }, []);
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       {/* ambient background */}
@@ -267,24 +255,9 @@ function Index() {
 type Answers = { role: string; revenue: string; urgency: string; name: string; email: string; phone: string };
 
 const STEPS = [
-  {
-    key: "role" as const,
-    title: "What's your role?",
-    subtitle: "Help us tailor NazAI for you.",
-    options: ["Founder/CEO", "COO", "CTO", "CMO", "Other"],
-  },
-  {
-    key: "revenue" as const,
-    title: "What's your annual revenue?",
-    subtitle: "We'll match you to the right NazAI tier.",
-    options: ["<$100K", "$100K - $1M", "$1M - $5M", "$5M - $10M", "$10M+"],
-  },
-  {
-    key: "urgency" as const,
-    title: "How urgent is AI automation?",
-    subtitle: "Based on your current operations.",
-    options: ["Critical", "High", "Medium", "Low"],
-  },
+  { key: "role" as const, title: "What's your role?", subtitle: "Help us tailor NazAI for you.", options: ["Founder/CEO", "COO", "CTO", "CMO", "Other"] },
+  { key: "revenue" as const, title: "What's your annual revenue?", subtitle: "We'll match you to the right NazAI tier.", options: ["<$100K", "$100K - $1M", "$1M - $5M", "$5M - $10M", "$10M+"] },
+  { key: "urgency" as const, title: "How urgent is AI automation?", subtitle: "Based on your current operations.", options: ["Critical", "High", "Medium", "Low"] },
 ];
 
 function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -293,9 +266,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   const [position, setPosition] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<Answers>({
-    role: "", revenue: "", urgency: "", name: "", email: "", phone: "",
-  });
+  const [answers, setAnswers] = useState<Answers>({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" });
 
   if (!open) return null;
 
@@ -326,7 +297,6 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
       .single();
 
     if (insertError) {
-      // If they already signed up, fetch existing position
       if (insertError.code === "23505") {
         const { data: existing } = await supabase
           .from("waitlist_signups")
@@ -376,7 +346,6 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--magenta)]">Join Waitlist</span>
             </div>
 
-            {/* progress dots */}
             <div className="mt-6 flex items-center justify-center gap-2">
               {Array.from({ length: totalSteps }).map((_, i) => {
                 const isActive = i === activeStep;
@@ -387,11 +356,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
                     className="h-1.5 rounded-full transition-all"
                     style={{
                       width: isActive ? 28 : 8,
-                      background: isActive
-                        ? "var(--magenta)"
-                        : isPast
-                        ? "var(--cyan)"
-                        : "oklch(0.3 0.04 270)",
+                      background: isActive ? "var(--magenta)" : isPast ? "var(--cyan)" : "oklch(0.3 0.04 270)",
                       boxShadow: isActive ? "0 0 12px var(--magenta)" : "none",
                     }}
                   />
@@ -427,14 +392,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   );
 }
 
-function StepChoice({
-  step, value, onSelect, onBack,
-}: {
-  step: typeof STEPS[number];
-  value: string;
-  onSelect: (v: string) => void;
-  onBack?: () => void;
-}) {
+function StepChoice({ step, value, onSelect, onBack }: { step: typeof STEPS[number]; value: string; onSelect: (v: string) => void; onBack?: () => void }) {
   return (
     <div className="mt-6 animate-[fade-in_0.4s_ease-out] sm:mt-8">
       <h3 className="text-xl font-bold tracking-tight sm:text-2xl" style={{ animation: "fade-in 0.45s ease-out both" }}>{step.title}</h3>
@@ -468,16 +426,7 @@ function StepChoice({
   );
 }
 
-function StepContact({
-  answers, setAnswers, onBack, onSubmit, submitting, error,
-}: {
-  answers: Answers;
-  setAnswers: React.Dispatch<React.SetStateAction<Answers>>;
-  onBack: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-  submitting: boolean;
-  error: string | null;
-}) {
+function StepContact({ answers, setAnswers, onBack, onSubmit, submitting, error }: { answers: Answers; setAnswers: React.Dispatch<React.SetStateAction<Answers>>; onBack: () => void; onSubmit: (e: React.FormEvent) => void; submitting: boolean; error: string | null }) {
   const field = (label: string, key: keyof Answers, type: string, placeholder: string, delay: number) => (
     <div style={{ animation: `fade-in 0.45s ease-out ${delay}s both` }}>
       <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{label}</label>
