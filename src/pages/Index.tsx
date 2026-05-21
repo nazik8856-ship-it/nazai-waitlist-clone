@@ -262,66 +262,38 @@ export default function Index() {
 }
 
 function IntroOverlay() {
-  // Generate neural connections from center orb to surrounding nodes
-  const nodes = Array.from({ length: 14 }).map((_, i) => {
-    const angle = (i / 14) * Math.PI * 2 + (i % 2 ? 0.2 : -0.15);
-    const r = 180 + (i % 3) * 70;
-    return { x: 400 + Math.cos(angle) * r, y: 300 + Math.sin(angle) * r, delay: 0.4 + i * 0.06 };
-  });
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black"
-      style={{ animation: "intro-fade-out 0.8s ease-in 2.8s forwards" }}
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black overflow-hidden"
+      style={{ animation: "intro-fade-out 0.7s ease-in 3.1s forwards" }}
       aria-hidden
     >
-      {/* Orb */}
+      {/* Orbiting purple dot — rotator centered, dot offset on its arm */}
       <div
-        className="absolute left-1/2 top-1/2 h-40 w-40 rounded-full"
+        className="absolute left-1/2 top-1/2"
         style={{
-          background: "radial-gradient(circle, oklch(0.78 0.2 280 / 0.95), oklch(0.5 0.25 290 / 0.4) 55%, transparent 75%)",
-          boxShadow: "0 0 120px 40px oklch(0.6 0.25 290 / 0.55), 0 0 220px 80px oklch(0.78 0.15 200 / 0.35)",
-          animation: "orb-pulse 2.4s ease-in-out infinite",
+          width: 0,
+          height: 0,
+          animation: "orbit-once 1.8s cubic-bezier(0.65, 0, 0.35, 1) forwards",
         }}
-      />
-      {/* Neural network */}
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
-        <defs>
-          <linearGradient id="neuralLine" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="oklch(0.78 0.15 200)" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="oklch(0.7 0.25 320)" stopOpacity="0.2" />
-          </linearGradient>
-        </defs>
-        {nodes.map((n, i) => (
-          <line
-            key={`l${i}`}
-            x1="400" y1="300" x2={n.x} y2={n.y}
-            stroke="url(#neuralLine)"
-            strokeWidth="1.2"
-            strokeDasharray="400"
-            style={{ animation: `neural-draw 1s ease-out ${n.delay}s both` }}
-          />
-        ))}
-        {nodes.map((n, i) => (
-          <circle
-            key={`n${i}`}
-            cx={n.x} cy={n.y} r="3"
-            fill="oklch(0.85 0.15 280)"
-            style={{ transformOrigin: `${n.x}px ${n.y}px`, animation: `node-pop 0.6s ease-out ${n.delay + 0.7}s both` }}
-          />
-        ))}
-      </svg>
-      {/* Logo + tagline */}
-      <div className="relative z-10 flex flex-col items-center text-center px-6">
-        <div style={{ animation: "fade-in 0.9s ease-out 1.6s both" }}>
-          <Logo />
-        </div>
+      >
         <div
-          className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl"
-          style={{ animation: "type-reveal 1.1s steps(40, end) 2.05s both, fade-in 0.4s ease-out 2.05s both" }}
-        >
-          <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
-            Built for the Future.
-          </span>
+          className="absolute h-3 w-3 rounded-full"
+          style={{
+            top: -6,
+            left: 180,
+            background: "oklch(0.72 0.27 305)",
+            boxShadow: "0 0 18px 4px oklch(0.7 0.27 305 / 0.85), 0 0 40px 10px oklch(0.6 0.25 290 / 0.5)",
+          }}
+        />
+      </div>
+      {/* Logo appears after the orbit */}
+      <div
+        className="relative z-10 flex flex-col items-center text-center px-6"
+        style={{ animation: "fade-in 0.7s ease-out 1.9s both" }}
+      >
+        <div className="scale-150">
+          <Logo />
         </div>
       </div>
     </div>
