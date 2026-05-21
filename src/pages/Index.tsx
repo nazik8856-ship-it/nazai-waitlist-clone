@@ -283,39 +283,22 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
     if (!answers.name || !answers.email) return;
     setSubmitting(true);
     setError(null);
-    const { data, error: insertError } = await supabase
-      .from("waitlist_signups")
-      .insert({
-        name: answers.name.trim(),
-        email: answers.email.trim().toLowerCase(),
-        phone: answers.phone || null,
-        role: answers.role || null,
-        revenue: answers.revenue || null,
-        urgency: answers.urgency || null,
-      })
-      .select("position")
-      .single();
+    const { data, error: rpcError } = await supabase.rpc("join_waitlist", {
+      _name: answers.name.trim(),
+      _email: answers.email.trim().toLowerCase(),
+      _phone: answers.phone || null,
+      _role: answers.role || null,
+      _revenue: answers.revenue || null,
+      _urgency: answers.urgency || null,
+    });
 
-    if (insertError) {
-      if (insertError.code === "23505") {
-        const { data: existing } = await supabase
-          .from("waitlist_signups")
-          .select("position")
-          .eq("email", answers.email.trim().toLowerCase())
-          .maybeSingle();
-        if (existing) {
-          setPosition(Number(existing.position));
-          setDone(true);
-          setSubmitting(false);
-          return;
-        }
-      }
-      setError(insertError.message || "Something went wrong. Please try again.");
+    if (rpcError) {
+      setError(rpcError.message || "Something went wrong. Please try again.");
       setSubmitting(false);
       return;
     }
 
-    setPosition(Number(data!.position));
+    setPosition(Number(data));
     setDone(true);
     setSubmitting(false);
   };
