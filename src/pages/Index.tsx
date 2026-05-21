@@ -99,7 +99,10 @@ export default function Index() {
       </header>
 
       {/* Hero */}
-      <section className="relative mx-auto max-w-7xl px-6 pt-24 pb-32 text-center">
+      <section
+        className="relative mx-auto max-w-7xl px-6 pt-24 pb-32 text-center"
+        style={{ animation: "blur-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) 3.0s both" }}
+      >
         <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cyan)]/40 bg-[var(--cyan)]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[var(--cyan)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--cyan)]" /> Early Access · Limited Spots
         </div>
