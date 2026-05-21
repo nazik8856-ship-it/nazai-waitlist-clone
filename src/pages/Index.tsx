@@ -343,15 +343,38 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answers>({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" });
+  const [mode, setMode] = useState<"signup" | "lookup">("signup");
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   if (!open) return null;
 
-  const reset = () => { setStep(0); setDone(false); setError(null); setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" }); };
+  const reset = () => {
+    setStep(0); setDone(false); setError(null);
+    setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" });
+    setMode("signup"); setLookupEmail(""); setLookupError(null); setLookupLoading(false);
+  };
   const close = () => { onClose(); setTimeout(reset, 300); };
 
   const selectOption = (key: keyof Answers, value: string) => {
     setAnswers((a) => ({ ...a, [key]: value }));
     setTimeout(() => setStep((s) => s + 1), 150);
+  };
+
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lookupEmail.trim()) return;
+    setLookupLoading(true); setLookupError(null);
+    const { data, error: rpcError } = await supabase.rpc("lookup_waitlist_position", {
+      _email: lookupEmail.trim().toLowerCase(),
+    });
+    setLookupLoading(false);
+    if (rpcError) { setLookupError(rpcError.message || "Lookup failed."); return; }
+    if (data == null) { setLookupError("We couldn't find that email on the waitlist."); return; }
+    setAnswers((a) => ({ ...a, name: a.name || lookupEmail.split("@")[0], email: lookupEmail.trim().toLowerCase() }));
+    setPosition(Number(data));
+    setDone(true);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -405,7 +428,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--magenta)]">Join Waitlist</span>
             </div>
 
-            <div className="mt-6 flex items-center justify-center gap-2">
+            {mode === "signup" && <div className="mt-6 flex items-center justify-center gap-2">
               {Array.from({ length: totalSteps }).map((_, i) => {
                 const isActive = i === activeStep;
                 const isPast = i < activeStep;
@@ -421,9 +444,40 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
                   />
                 );
               })}
-            </div>
+            </div>}
 
-            {step < 3 ? (
+            {mode === "lookup" ? (
+              <form onSubmit={handleLookup} className="mt-6 animate-[fade-in_0.4s_ease-out] sm:mt-8">
+                <h3 className="text-xl font-bold tracking-tight sm:text-2xl">Welcome back.</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Enter your email to view your waitlist position.</p>
+                <div className="mt-5">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Email Address</label>
+                  <input
+                    type="email"
+                    value={lookupEmail}
+                    onChange={(e) => setLookupEmail(e.target.value)}
+                    placeholder="john@company.com"
+                    autoFocus
+                    className="mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[var(--magenta)]"
+                    style={{ borderColor: "oklch(0.3 0.04 270 / 60%)", background: "oklch(0.17 0.03 270)" }}
+                  />
+                </div>
+                {lookupError && <p className="mt-4 text-sm text-destructive">{lookupError}</p>}
+                <div className="mt-7 flex items-center justify-between gap-3">
+                  <button type="button" onClick={() => { setMode("signup"); setLookupError(null); }} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+                    <ChevronLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={lookupLoading}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60 sm:px-6 sm:py-3"
+                    style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
+                  >
+                    {lookupLoading ? "Checking…" : "View My Spot"} <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
+            ) : step < 3 ? (
               <StepChoice
                 key={step}
                 step={STEPS[step]}
@@ -441,6 +495,14 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
                 submitting={submitting}
                 error={error}
               />
+            )}
+            {mode === "signup" && step === 0 && (
+              <p className="mt-6 text-center text-xs text-muted-foreground" style={{ animation: "fade-in 0.5s ease-out 0.4s both" }}>
+                Already on the list?{" "}
+                <button type="button" onClick={() => setMode("lookup")} className="font-semibold text-[var(--magenta)] underline-offset-4 hover:underline">
+                  Check your spot
+                </button>
+              </p>
             )}
           </>
         ) : (
