@@ -67,10 +67,16 @@ function AvatarStack() {
 
 export default function Index() {
   const [open, setOpen] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const openModal = () => setOpen(true);
-  useEffect(() => { document.title = "NazAI — Orchestrates Any Business Function"; }, []);
+  useEffect(() => {
+    document.title = "NazAI — Orchestrates Any Business Function";
+    const t = setTimeout(() => setIntroDone(true), 3600);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      {!introDone && <IntroOverlay />}
       {/* ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full opacity-30 blur-3xl"
