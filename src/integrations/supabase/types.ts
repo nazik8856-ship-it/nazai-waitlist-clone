@@ -55,7 +55,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      join_waitlist: {
+        Args: {
+          _email: string
+          _name: string
+          _phone?: string
+          _revenue?: string
+          _role?: string
+          _urgency?: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
