@@ -286,10 +286,10 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
     const { data, error: rpcError } = await supabase.rpc("join_waitlist", {
       _name: answers.name.trim(),
       _email: answers.email.trim().toLowerCase(),
-      _phone: answers.phone || null,
-      _role: answers.role || null,
-      _revenue: answers.revenue || null,
-      _urgency: answers.urgency || null,
+      _phone: answers.phone || undefined,
+      _role: answers.role || undefined,
+      _revenue: answers.revenue || undefined,
+      _urgency: answers.urgency || undefined,
     });
 
     if (rpcError) {
