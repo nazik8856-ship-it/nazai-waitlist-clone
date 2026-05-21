@@ -66,6 +66,7 @@ export type Database = {
         }
         Returns: number
       }
+      lookup_waitlist_position: { Args: { _email: string }; Returns: number }
     }
     Enums: {
       [_ in never]: never

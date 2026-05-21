@@ -67,10 +67,16 @@ function AvatarStack() {
 
 export default function Index() {
   const [open, setOpen] = useState(false);
+  const [introDone, setIntroDone] = useState(false);
   const openModal = () => setOpen(true);
-  useEffect(() => { document.title = "NazAI — Orchestrates Any Business Function"; }, []);
+  useEffect(() => {
+    document.title = "NazAI — Orchestrates Any Business Function";
+    const t = setTimeout(() => setIntroDone(true), 3600);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      {!introDone && <IntroOverlay />}
       {/* ambient background */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 rounded-full opacity-30 blur-3xl"
@@ -93,7 +99,10 @@ export default function Index() {
       </header>
 
       {/* Hero */}
-      <section className="relative mx-auto max-w-7xl px-6 pt-24 pb-32 text-center">
+      <section
+        className="relative mx-auto max-w-7xl px-6 pt-24 pb-32 text-center"
+        style={{ animation: "blur-rise 1.1s cubic-bezier(0.22, 1, 0.36, 1) 3.0s both" }}
+      >
         <div className="inline-flex items-center gap-2 rounded-full border border-[var(--cyan)]/40 bg-[var(--cyan)]/5 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-[var(--cyan)]">
           <span className="h-1.5 w-1.5 rounded-full bg-[var(--cyan)]" /> Early Access · Limited Spots
         </div>
@@ -252,6 +261,73 @@ export default function Index() {
   );
 }
 
+function IntroOverlay() {
+  // Generate neural connections from center orb to surrounding nodes
+  const nodes = Array.from({ length: 14 }).map((_, i) => {
+    const angle = (i / 14) * Math.PI * 2 + (i % 2 ? 0.2 : -0.15);
+    const r = 180 + (i % 3) * 70;
+    return { x: 400 + Math.cos(angle) * r, y: 300 + Math.sin(angle) * r, delay: 0.4 + i * 0.06 };
+  });
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black"
+      style={{ animation: "intro-fade-out 0.8s ease-in 2.8s forwards" }}
+      aria-hidden
+    >
+      {/* Orb */}
+      <div
+        className="absolute left-1/2 top-1/2 h-40 w-40 rounded-full"
+        style={{
+          background: "radial-gradient(circle, oklch(0.78 0.2 280 / 0.95), oklch(0.5 0.25 290 / 0.4) 55%, transparent 75%)",
+          boxShadow: "0 0 120px 40px oklch(0.6 0.25 290 / 0.55), 0 0 220px 80px oklch(0.78 0.15 200 / 0.35)",
+          animation: "orb-pulse 2.4s ease-in-out infinite",
+        }}
+      />
+      {/* Neural network */}
+      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="neuralLine" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="oklch(0.78 0.15 200)" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="oklch(0.7 0.25 320)" stopOpacity="0.2" />
+          </linearGradient>
+        </defs>
+        {nodes.map((n, i) => (
+          <line
+            key={`l${i}`}
+            x1="400" y1="300" x2={n.x} y2={n.y}
+            stroke="url(#neuralLine)"
+            strokeWidth="1.2"
+            strokeDasharray="400"
+            style={{ animation: `neural-draw 1s ease-out ${n.delay}s both` }}
+          />
+        ))}
+        {nodes.map((n, i) => (
+          <circle
+            key={`n${i}`}
+            cx={n.x} cy={n.y} r="3"
+            fill="oklch(0.85 0.15 280)"
+            style={{ transformOrigin: `${n.x}px ${n.y}px`, animation: `node-pop 0.6s ease-out ${n.delay + 0.7}s both` }}
+          />
+        ))}
+      </svg>
+      {/* Logo + tagline */}
+      <div className="relative z-10 flex flex-col items-center text-center px-6">
+        <div style={{ animation: "fade-in 0.9s ease-out 1.6s both" }}>
+          <Logo />
+        </div>
+        <div
+          className="mt-6 text-3xl font-bold tracking-tight sm:text-4xl"
+          style={{ animation: "type-reveal 1.1s steps(40, end) 2.05s both, fade-in 0.4s ease-out 2.05s both" }}
+        >
+          <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
+            Built for the Future.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type Answers = { role: string; revenue: string; urgency: string; name: string; email: string; phone: string };
 
 const STEPS = [
@@ -267,15 +343,38 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answers>({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" });
+  const [mode, setMode] = useState<"signup" | "lookup">("signup");
+  const [lookupEmail, setLookupEmail] = useState("");
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
 
   if (!open) return null;
 
-  const reset = () => { setStep(0); setDone(false); setError(null); setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" }); };
+  const reset = () => {
+    setStep(0); setDone(false); setError(null);
+    setAnswers({ role: "", revenue: "", urgency: "", name: "", email: "", phone: "" });
+    setMode("signup"); setLookupEmail(""); setLookupError(null); setLookupLoading(false);
+  };
   const close = () => { onClose(); setTimeout(reset, 300); };
 
   const selectOption = (key: keyof Answers, value: string) => {
     setAnswers((a) => ({ ...a, [key]: value }));
     setTimeout(() => setStep((s) => s + 1), 150);
+  };
+
+  const handleLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lookupEmail.trim()) return;
+    setLookupLoading(true); setLookupError(null);
+    const { data, error: rpcError } = await supabase.rpc("lookup_waitlist_position", {
+      _email: lookupEmail.trim().toLowerCase(),
+    });
+    setLookupLoading(false);
+    if (rpcError) { setLookupError(rpcError.message || "Lookup failed."); return; }
+    if (data == null) { setLookupError("We couldn't find that email on the waitlist."); return; }
+    setAnswers((a) => ({ ...a, name: a.name || lookupEmail.split("@")[0], email: lookupEmail.trim().toLowerCase() }));
+    setPosition(Number(data));
+    setDone(true);
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -329,7 +428,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-[var(--magenta)]">Join Waitlist</span>
             </div>
 
-            <div className="mt-6 flex items-center justify-center gap-2">
+            {mode === "signup" && <div className="mt-6 flex items-center justify-center gap-2">
               {Array.from({ length: totalSteps }).map((_, i) => {
                 const isActive = i === activeStep;
                 const isPast = i < activeStep;
@@ -345,9 +444,40 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
                   />
                 );
               })}
-            </div>
+            </div>}
 
-            {step < 3 ? (
+            {mode === "lookup" ? (
+              <form onSubmit={handleLookup} className="mt-6 animate-[fade-in_0.4s_ease-out] sm:mt-8">
+                <h3 className="text-xl font-bold tracking-tight sm:text-2xl">Welcome back.</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Enter your email to view your waitlist position.</p>
+                <div className="mt-5">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Email Address</label>
+                  <input
+                    type="email"
+                    value={lookupEmail}
+                    onChange={(e) => setLookupEmail(e.target.value)}
+                    placeholder="john@company.com"
+                    autoFocus
+                    className="mt-2 w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:border-[var(--magenta)]"
+                    style={{ borderColor: "oklch(0.3 0.04 270 / 60%)", background: "oklch(0.17 0.03 270)" }}
+                  />
+                </div>
+                {lookupError && <p className="mt-4 text-sm text-destructive">{lookupError}</p>}
+                <div className="mt-7 flex items-center justify-between gap-3">
+                  <button type="button" onClick={() => { setMode("signup"); setLookupError(null); }} className="inline-flex items-center gap-1 text-sm text-muted-foreground transition hover:text-foreground">
+                    <ChevronLeft className="h-4 w-4" /> Back
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={lookupLoading}
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-60 sm:px-6 sm:py-3"
+                    style={{ background: "var(--gradient-cta)", boxShadow: "var(--shadow-glow)" }}
+                  >
+                    {lookupLoading ? "Checking…" : "View My Spot"} <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </form>
+            ) : step < 3 ? (
               <StepChoice
                 key={step}
                 step={STEPS[step]}
@@ -365,6 +495,14 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
                 submitting={submitting}
                 error={error}
               />
+            )}
+            {mode === "signup" && step === 0 && (
+              <p className="mt-6 text-center text-xs text-muted-foreground" style={{ animation: "fade-in 0.5s ease-out 0.4s both" }}>
+                Already on the list?{" "}
+                <button type="button" onClick={() => setMode("lookup")} className="font-semibold text-[var(--magenta)] underline-offset-4 hover:underline">
+                  Check your spot
+                </button>
+              </p>
             )}
           </>
         ) : (
