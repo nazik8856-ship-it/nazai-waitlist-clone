@@ -29,6 +29,15 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Resolve admin alias to the configured admin/waitlist inbox secret
+    let toList = Array.isArray(body.to) ? body.to : [body.to]
+    toList = toList.map((addr) => {
+      if (addr === '__admin__') {
+        return Deno.env.get('Waitlist') || SENDER_EMAIL
+      }
+      return addr
+    })
+
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -37,7 +46,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         from: SENDER_EMAIL,
-        to: Array.isArray(body.to) ? body.to : [body.to],
+        to: toList,
         subject: body.subject,
         html: body.html,
       }),
