@@ -25,7 +25,7 @@ interface TemplatePayload {
 
 type Payload = DirectPayload | TemplatePayload
 
-const SITE_URL = 'https://nazai-waitlist-clone.lovable.app'
+const SITE_URL = 'https://nazai.net'
 const YT = 'https://www.youtube.com/@NazAI-n-8b'
 const TT = 'https://www.tiktok.com/@nazai.ai.business'
 const CONTACT = 'nazai8832@gmail.com'
