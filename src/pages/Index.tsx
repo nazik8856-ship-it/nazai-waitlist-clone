@@ -401,7 +401,7 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
       body: { to: userEmail, subject: `You're on the NazAI waitlist — #${pos}`, html: userHtml },
     });
     void supabase.functions.invoke("send-email", {
-      body: { to: "Waitlist", subject: `New signup #${pos} — ${userName}`, html: adminHtml },
+      body: { to: "__admin__", subject: `New signup #${pos} — ${userName}`, html: adminHtml },
     }).catch(() => {});
   };
 
