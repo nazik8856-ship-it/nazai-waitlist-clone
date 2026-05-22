@@ -372,6 +372,37 @@ function WaitlistModal({ open, onClose }: { open: boolean; onClose: () => void }
     setPosition(Number(data));
     setDone(true);
     setSubmitting(false);
+
+    // Fire-and-forget confirmation emails (don't block UX on failure)
+    const pos = Number(data);
+    const userEmail = answers.email.trim().toLowerCase();
+    const userName = answers.name.trim();
+    const userHtml = `
+      <div style="font-family:Arial,sans-serif;background:#000;color:#fff;padding:32px;border-radius:12px;max-width:560px;margin:auto">
+        <h1 style="color:#c084fc;margin:0 0 16px;font-size:24px">Welcome to NazAI, ${userName}.</h1>
+        <p style="color:#d4d4d8;line-height:1.6">You're officially on the waitlist.</p>
+        <p style="color:#fff;font-size:18px;margin:24px 0">Your position: <strong style="color:#c084fc">#${pos}</strong></p>
+        <p style="color:#a1a1aa;font-size:14px">We'll be in touch as spots open up. Stay sharp.</p>
+        <p style="color:#71717a;font-size:12px;margin-top:32px">— The NazAI Team</p>
+      </div>`;
+    const adminHtml = `
+      <div style="font-family:Arial,sans-serif;padding:16px">
+        <h2>New NazAI waitlist signup (#${pos})</h2>
+        <ul>
+          <li><strong>Name:</strong> ${userName}</li>
+          <li><strong>Email:</strong> ${userEmail}</li>
+          <li><strong>Phone:</strong> ${answers.phone || "—"}</li>
+          <li><strong>Role:</strong> ${answers.role || "—"}</li>
+          <li><strong>Revenue:</strong> ${answers.revenue || "—"}</li>
+          <li><strong>Urgency:</strong> ${answers.urgency || "—"}</li>
+        </ul>
+      </div>`;
+    void supabase.functions.invoke("send-email", {
+      body: { to: userEmail, subject: `You're on the NazAI waitlist — #${pos}`, html: userHtml },
+    });
+    void supabase.functions.invoke("send-email", {
+      body: { to: "Waitlist", subject: `New signup #${pos} — ${userName}`, html: adminHtml },
+    }).catch(() => {});
   };
 
   const totalSteps = 4;
