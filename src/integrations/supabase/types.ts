@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       waitlist_signups: {
         Row: {
+          access_granted: boolean
+          access_granted_at: string | null
           created_at: string
           email: string
           id: string
@@ -27,6 +29,8 @@ export type Database = {
           urgency: string | null
         }
         Insert: {
+          access_granted?: boolean
+          access_granted_at?: string | null
           created_at?: string
           email: string
           id?: string
@@ -38,6 +42,8 @@ export type Database = {
           urgency?: string | null
         }
         Update: {
+          access_granted?: boolean
+          access_granted_at?: string | null
           created_at?: string
           email?: string
           id?: string
