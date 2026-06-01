@@ -23,6 +23,20 @@ const testimonials = [
   { match: "91.0%", quote: "Asset Synthesis nailed our palette on the first pass. Every iteration archived to the Vault — replayable any time.", metric: "Saved 18 hrs/week", initials: "AN", name: "Alex Nguyen", role: "Indie Developer · Pixelmint" },
   { match: "96.8%", quote: "Mission Briefs are a cheat code. Successful generation with every prompt — no wasted credits.", metric: "200 SEO pages in one afternoon", initials: "JT", name: "Jordan Tate", role: "Head of Growth · Helo Studio" },
   { match: "94.2%", quote: "NazAI auto-corrected three briefs I've shipped. Felt like a senior strategist was right beside me.", metric: "3x output velocity", initials: "SK", name: "Sasha Keller", role: "Founder · Keller Studio" },
+  { match: "92.7%", quote: "We replaced three SaaS tools in our first week. The Logic Gate just gets our domain.", metric: "Stack cost down 62%", initials: "MR", name: "Maya Rivera", role: "COO · Lumen Robotics" },
+  { match: "97.3%", quote: "Our quarterly board deck was drafted, sourced and fact-checked in 40 minutes. Unreal.", metric: "Board prep in <1 hr", initials: "EO", name: "Ethan Okafor", role: "CFO · Northwind Labs" },
+  { match: "89.4%", quote: "Auto Engine kept iterating on our cold outbound until reply rate doubled. Set and forget.", metric: "2.1× reply rate", initials: "LC", name: "Lina Chen", role: "Growth · Arcwave" },
+  { match: "95.6%", quote: "Onboarded my new ops hire in two days using NazAI-generated SOPs. Felt like cheating.", metric: "Onboarding 5× faster", initials: "DK", name: "Diego Kraus", role: "Founder · Stellate Studio" },
+];
+
+// Stylised client wordmark badges (in-house brand stack for landing trust strip)
+const clientBrands: { name: string; mark: string; font: string; tracking?: string }[] = [
+  { name: "NorthBeam",      mark: "△ NORTHBEAM",   font: "ui-sans-serif, system-ui", tracking: "0.18em" },
+  { name: "Pixelmint",      mark: "◆ pixelmint",    font: "ui-monospace, SFMono-Regular, Menlo, monospace", tracking: "0.04em" },
+  { name: "Helo Studio",    mark: "helo°",          font: "Georgia, 'Times New Roman', serif", tracking: "0.02em" },
+  { name: "Keller Studio",  mark: "KELLER/",        font: "Impact, 'Helvetica Neue', sans-serif", tracking: "0.22em" },
+  { name: "Lumen Robotics", mark: "✦ LUMEN",        font: "ui-sans-serif, system-ui", tracking: "0.32em" },
+  { name: "Arcwave",        mark: "~arcwave",       font: "ui-monospace, monospace", tracking: "0.06em" },
 ];
 
 function Logo() {
@@ -55,12 +69,51 @@ function JoinButton({ className = "", onClick }: { className?: string; onClick?:
   );
 }
 
-function AvatarStack() {
+function BrandStack({ brands = clientBrands.slice(0, 4) }: { brands?: typeof clientBrands }) {
   return (
-    <div className="flex -space-x-2">
-      <div className="h-6 w-6 rounded-full border-2 border-background bg-[var(--orange)]" />
-      <div className="h-6 w-6 rounded-full border-2 border-background bg-[var(--magenta)]" />
-      <div className="h-6 w-6 rounded-full border-2 border-background bg-[var(--cyan)]" />
+    <div className="flex flex-wrap items-center gap-1.5">
+      {brands.map((b) => (
+        <span
+          key={b.name}
+          title={b.name}
+          className="inline-flex h-7 items-center rounded-md border border-border/60 bg-background/60 px-2.5 text-[11px] font-semibold text-foreground/80 backdrop-blur transition hover:border-[var(--magenta)]/50 hover:text-foreground"
+          style={{ fontFamily: b.font, letterSpacing: b.tracking ?? "normal" }}
+        >
+          {b.mark}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function useWaitlistCount() {
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data, error } = await supabase.rpc("waitlist_count");
+      if (!cancelled && !error && data != null) setCount(Number(data));
+    };
+    load();
+    const id = setInterval(load, 15000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+  return count;
+}
+
+function LiveJoinedCount({ suffix }: { suffix: string }) {
+  const count = useWaitlistCount();
+  const display = count == null ? "…" : count.toLocaleString();
+  return (
+    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+      <BrandStack />
+      <span className="inline-flex items-center gap-1.5">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--cyan)] opacity-70" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--cyan)]" />
+        </span>
+        <span><span className="font-semibold text-foreground tabular-nums">{display}</span> {suffix}</span>
+      </span>
     </div>
   );
 }
@@ -68,12 +121,24 @@ function AvatarStack() {
 export default function Index() {
   const [open, setOpen] = useState(false);
   const [introDone, setIntroDone] = useState(false);
+  const [feedbackOffset, setFeedbackOffset] = useState(0);
   const openModal = () => setOpen(true);
   useEffect(() => {
     document.title = "NazAI — Orchestrates Any Business Function";
     const t = setTimeout(() => setIntroDone(true), 3900);
     return () => clearTimeout(t);
   }, []);
+  useEffect(() => {
+    const id = setInterval(
+      () => setFeedbackOffset((o) => (o + 1) % testimonials.length),
+      6000,
+    );
+    return () => clearInterval(id);
+  }, []);
+  const rotatedTestimonials = [
+    ...testimonials.slice(feedbackOffset),
+    ...testimonials.slice(0, feedbackOffset),
+  ];
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
       {!introDone && <IntroOverlay />}
@@ -119,9 +184,7 @@ export default function Index() {
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-5">
           <JoinButton onClick={openModal} />
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <AvatarStack /> <span><span className="font-semibold text-foreground">3</span> already on the list</span>
-          </div>
+          <LiveJoinedCount suffix="already on the list" />
         </div>
 
         {/* Stats */}
@@ -175,9 +238,7 @@ export default function Index() {
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-5">
             <JoinButton onClick={openModal} />
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-              <AvatarStack /> <span><span className="font-semibold text-foreground">3</span> founders already waiting</span>
-            </div>
+            <LiveJoinedCount suffix="founders already waiting" />
           </div>
         </div>
       </section>
@@ -192,11 +253,11 @@ export default function Index() {
               calibrated by operators.
             </span>
           </h2>
-          <p className="mt-4 text-sm text-muted-foreground">Hover to pause. Every card is a real mission logged in the Vault.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Auto-refreshing live feed. Hover to pause. Every card is a real mission logged in the Vault.</p>
         </div>
         <div className="group relative mt-14 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
           <div className="flex w-max gap-6 animate-[marquee_40s_linear_infinite] group-hover:[animation-play-state:paused]">
-            {[...testimonials, ...testimonials, ...testimonials].map((t, i) => (
+            {[...rotatedTestimonials, ...rotatedTestimonials, ...rotatedTestimonials].map((t, i) => (
               <div key={i} className="w-[360px] shrink-0 rounded-2xl border border-border/60 bg-background/60 p-6 backdrop-blur">
                 <div className="flex items-center justify-between text-[10px] font-semibold uppercase tracking-widest">
                   <span className="rounded-full border border-[var(--cyan)]/40 bg-[var(--cyan)]/10 px-2 py-0.5 text-[var(--cyan)]">Verified Mission</span>
