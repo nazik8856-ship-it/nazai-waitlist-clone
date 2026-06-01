@@ -69,18 +69,29 @@ function JoinButton({ className = "", onClick }: { className?: string; onClick?:
   );
 }
 
-function BrandStack({ brands = clientBrands.slice(0, 4) }: { brands?: typeof clientBrands }) {
+const avatarIcons: { emoji: string; bg: string }[] = [
+  { emoji: "🚀", bg: "linear-gradient(135deg, oklch(0.7 0.22 30), oklch(0.6 0.22 15))" },
+  { emoji: "⭐", bg: "linear-gradient(135deg, oklch(0.85 0.18 90), oklch(0.7 0.2 60))" },
+  { emoji: "💎", bg: "linear-gradient(135deg, oklch(0.78 0.15 200), oklch(0.6 0.2 240))" },
+  { emoji: "⚡", bg: "linear-gradient(135deg, oklch(0.85 0.2 100), oklch(0.7 0.22 60))" },
+  { emoji: "🔥", bg: "linear-gradient(135deg, oklch(0.7 0.25 30), oklch(0.65 0.25 350))" },
+  { emoji: "🧠", bg: "linear-gradient(135deg, oklch(0.7 0.22 320), oklch(0.55 0.22 290))" },
+  { emoji: "🌟", bg: "linear-gradient(135deg, oklch(0.85 0.18 80), oklch(0.7 0.22 40))" },
+  { emoji: "🌈", bg: "linear-gradient(135deg, oklch(0.75 0.22 320), oklch(0.7 0.2 200))" },
+];
+
+function AvatarStack({ count = 3 }: { count?: number }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {brands.map((b) => (
-        <span
-          key={b.name}
-          title={b.name}
-          className="inline-flex h-7 items-center rounded-md border border-border/60 bg-background/60 px-2.5 text-[11px] font-semibold text-foreground/80 backdrop-blur transition hover:border-[var(--magenta)]/50 hover:text-foreground"
-          style={{ fontFamily: b.font, letterSpacing: b.tracking ?? "normal" }}
+    <div className="flex -space-x-2">
+      {avatarIcons.slice(0, count).map((a, i) => (
+        <div
+          key={i}
+          className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-background text-[12px] leading-none shadow-sm"
+          style={{ background: a.bg }}
+          aria-hidden
         >
-          {b.mark}
-        </span>
+          <span>{a.emoji}</span>
+        </div>
       ))}
     </div>
   );
@@ -106,7 +117,7 @@ function LiveJoinedCount({ suffix }: { suffix: string }) {
   const display = count == null ? "…" : count.toLocaleString();
   return (
     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-      <BrandStack />
+      <AvatarStack count={3} />
       <span className="inline-flex items-center gap-1.5">
         <span className="relative flex h-2 w-2">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--cyan)] opacity-70" />
