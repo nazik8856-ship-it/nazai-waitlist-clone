@@ -27,7 +27,39 @@ const testimonials = [
   { match: "97.3%", quote: "Our quarterly board deck was drafted, sourced and fact-checked in 40 minutes. Unreal.", metric: "Board prep in <1 hr", initials: "EO", name: "Ethan Okafor", role: "CFO · Northwind Labs" },
   { match: "89.4%", quote: "Auto Engine kept iterating on our cold outbound until reply rate doubled. Set and forget.", metric: "2.1× reply rate", initials: "LC", name: "Lina Chen", role: "Growth · Arcwave" },
   { match: "95.6%", quote: "Onboarded my new ops hire in two days using NazAI-generated SOPs. Felt like cheating.", metric: "Onboarding 5× faster", initials: "DK", name: "Diego Kraus", role: "Founder · Stellate Studio" },
+  { match: "93.8%", quote: "NazAI mapped our entire GTM motion in an afternoon — channels, ICP scoring, the works.", metric: "GTM plan in 4 hrs", initials: "RV", name: "Rohan Verma", role: "VP Sales · Beacon Cloud" },
+  { match: "98.1%", quote: "It rewrote our pricing page three times until conversion lifted. The agent just kept iterating.", metric: "+38% conversion", initials: "TM", name: "Tomás Mendes", role: "Founder · Quilt Labs" },
+  { match: "90.7%", quote: "Logic Gate caught two contract clauses our lawyer missed. That alone paid for the year.", metric: "Caught $42K in risk", initials: "HK", name: "Hana Kobayashi", role: "GC · Vector Health" },
+  { match: "96.2%", quote: "Generated, A/B tested and shipped 30 ad variants overnight. Woke up to a winner.", metric: "CPA down 41%", initials: "OB", name: "Olivia Brandt", role: "Performance Lead · Halo Co" },
+  { match: "91.9%", quote: "Built our investor data room end-to-end. The diligence checklist alone saved a week.", metric: "Closed round 2× faster", initials: "FM", name: "Femi Martins", role: "Founder · Nexora" },
+  { match: "94.7%", quote: "I run a 4-person agency. NazAI is effectively my 5th, 6th and 7th hire.", metric: "3× client capacity", initials: "AC", name: "Amara Cole", role: "Owner · Cole&Co" },
+  { match: "97.6%", quote: "The Vault replay let me reconstruct a launch we shipped 3 months ago in minutes.", metric: "Zero context loss", initials: "JL", name: "Julian Leclerc", role: "PM · Saber Systems" },
+  { match: "92.3%", quote: "Auto Engine reconciled 6 months of bookkeeping while I slept. Books closed in one morning.", metric: "Books closed 9× faster", initials: "NS", name: "Nadia Souza", role: "Founder · Coastline Goods" },
 ];
+
+function useHourlyWindow<T>(pool: T[], size: number): T[] {
+  const pick = () => {
+    const hour = Math.floor(Date.now() / (60 * 60 * 1000));
+    const start = ((hour % pool.length) + pool.length) % pool.length;
+    return Array.from({ length: size }, (_, i) => pool[(start + i) % pool.length]);
+  };
+  const [items, setItems] = useState<T[]>(pick);
+  useEffect(() => {
+    const msUntilNextHour = 60 * 60 * 1000 - (Date.now() % (60 * 60 * 1000));
+    const first = setTimeout(() => {
+      setItems(pick());
+      const id = setInterval(() => setItems(pick()), 60 * 60 * 1000);
+      (first as unknown as { _id?: number })._id = id as unknown as number;
+    }, msUntilNextHour + 50);
+    return () => {
+      clearTimeout(first);
+      const id = (first as unknown as { _id?: number })._id;
+      if (id) clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return items;
+}
 
 // Stylised client wordmark badges (in-house brand stack for landing trust strip)
 const clientBrands: { name: string; mark: string; font: string; tracking?: string }[] = [
@@ -133,6 +165,7 @@ export default function Index() {
   const [open, setOpen] = useState(false);
   const [introDone, setIntroDone] = useState(false);
   const [feedbackOffset, setFeedbackOffset] = useState(0);
+  const hourlyFeedbacks = useHourlyWindow(testimonials, 8);
   const openModal = () => setOpen(true);
   useEffect(() => {
     document.title = "NazAI — Orchestrates Any Business Function";
@@ -141,14 +174,14 @@ export default function Index() {
   }, []);
   useEffect(() => {
     const id = setInterval(
-      () => setFeedbackOffset((o) => (o + 1) % testimonials.length),
+      () => setFeedbackOffset((o) => (o + 1) % Math.max(1, hourlyFeedbacks.length)),
       6000,
     );
     return () => clearInterval(id);
-  }, []);
+  }, [hourlyFeedbacks.length]);
   const rotatedTestimonials = [
-    ...testimonials.slice(feedbackOffset),
-    ...testimonials.slice(0, feedbackOffset),
+    ...hourlyFeedbacks.slice(feedbackOffset),
+    ...hourlyFeedbacks.slice(0, feedbackOffset),
   ];
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground">
